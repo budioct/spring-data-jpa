@@ -1,4 +1,4 @@
-package com.tutorial.declarativetransaction;
+package com.tutorial.transaction;
 
 import com.tutorial.service.CategoryService;
 import org.junit.jupiter.api.Assertions;
