@@ -1,6 +1,6 @@
 package com.tutorial.pengenalanspringjpa;
 
-public class PengenalanSpringJPA {
+public class PengenalanSpringJPATest {
 
     /**
      * Pengenalan Spring Data JPA

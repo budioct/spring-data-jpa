@@ -1,6 +1,6 @@
 package com.tutorial.pengenalanspringjpa;
 
-public class DataSource {
+public class DataSourceTest {
 
     /**
      * DataSource
