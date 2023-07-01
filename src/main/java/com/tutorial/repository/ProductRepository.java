@@ -1,6 +1,7 @@
 package com.tutorial.repository;
 
 import com.tutorial.entity.Product;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,15 +17,21 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      * karena di method tidak boleh menggunakan . akan di gantikan dengan _ (underscore)
      */
 
-    // query method relasi: select * from products left join categories on (categories.id = product.category_id) where name = ?
+    // query method relasi: select * from products left join categories on (categories.id = product.category_id) where name=?
     List<Product> findAllByCategory_Name(String name);
 
 
-    // query method relasi dengan sorting: select * from products left join categories on (categories.id = product.category_id) where name = ? order by products.id desc
+    // hasil akan di sorting
+    // query method relasi dengan sorting: select * from products left join categories on (categories.id = product.category_id) where name=? order by products.id desc
     List<Product> findAllByCategory_Name(String name, Sort sort);
 
 
-    // query method relasi dengan pageable: select * from products left join categories on (categories.id = product.category_id) where name = ? order by products.id desc limit ?, ?
-    List<Product> findAllByCategory_Name(String name, Pageable pageable);
+    // mendapatkan offset and limit
+    // query method relasi dengan pageable: select * from products left join categories on (categories.id = product.category_id) where name=? order by products.id desc limit ?, ?
+    //List<Product> findAllByCategory_Name(String name, Pageable pageable);
+
+    // ingin mendapatkan Page Result
+    // query method relasi dengan pageable: select * from products left join categories on (categories.id = products.category_id) where name=? order by products.id desc limit ?, ?
+    Page<Product> findAllByCategory_Name(String name, Pageable pageable);
 
 }

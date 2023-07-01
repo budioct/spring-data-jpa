@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
@@ -178,26 +179,87 @@ public class QueryRelationTest {
      * ● https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/domain/PageRequest.html
      */
 
+//    @Test
+//    void testFindProductWithPageable(){
+//
+//        // halaman ke 1 dan ukuran datanya
+//        PageRequest pageable = PageRequest.of(0, 1, Sort.by(Sort.Order.desc("id"))); // static PageRequest of(int page, int size, Sort sort) // kita bisa atur offset and limit juga order by pada query method
+//        List<Product> products = productRepository.findAllByCategory_Name("BUKU", pageable);
+//
+//        // hasil sudah di kasih offset dan limiet juga order by dalam query nya
+//        Assertions.assertEquals(1, products.size());
+//        Assertions.assertEquals("masak", products.get(0).getName());
+//
+//        // halaman ke 2 dan ukuran datanya
+//        pageable = PageRequest.of(1, 1, Sort.by(Sort.Order.desc("id"))); // static PageRequest of(int page, int size, Sort sort) // kita bisa atur offset and limit juga order by pada query method
+//        products = productRepository.findAllByCategory_Name("BUKU", pageable);
+//
+//        Assertions.assertEquals(1, products.size());
+//        Assertions.assertEquals("komik", products.get(0).getName());
+//
+//        /**
+//         * query result:
+//         * Hibernate:
+//         *     select
+//         *         p1_0.id,
+//         *         p1_0.category_id,
+//         *         p1_0.name,
+//         *         p1_0.price
+//         *     from
+//         *         products p1_0
+//         *     left join
+//         *         categories c1_0
+//         *             on c1_0.id=p1_0.category_id
+//         *     where
+//         *         c1_0.name=?
+//         *     order by
+//         *         p1_0.id desc limit ?,
+//         *         ?
+//         * Hibernate:
+//         *     select
+//         *         c1_0.id,
+//         *         c1_0.name
+//         *     from
+//         *         categories c1_0
+//         *     where
+//         *         c1_0.id=?
+//         */
+//    }
+
+    /**
+     * Page Result
+     * ● Saat kita menggunakan Paging, kadang kita ingin tahu seperti jumlah total data hasil query, dan juga total page nya
+     * ● Hal ini biasanya kita akan lakukan dengan cara manual dengan cara menghitung count dari hasil total hasil query tanpa paging
+     * ● Untungnya, Spring Data JPA menyediakan return value berupa Page<T>, dimana secara otomatis akan diambil informasi total data dan total page nya
+     * ● https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/domain/Page.html
+     */
+
     @Test
-    void testFindProductWithPageable(){
+    void testFindProductWithPageableResultPage(){
 
         // halaman ke 1 dan ukuran datanya
         PageRequest pageable = PageRequest.of(0, 1, Sort.by(Sort.Order.desc("id"))); // static PageRequest of(int page, int size, Sort sort) // kita bisa atur offset and limit juga order by pada query method
-        List<Product> products = productRepository.findAllByCategory_Name("BUKU", pageable);
+        Page<Product> products = productRepository.findAllByCategory_Name("BUKU", pageable);
 
         // hasil sudah di kasih offset dan limiet juga order by dalam query nya
-        Assertions.assertEquals(1, products.size());
-        Assertions.assertEquals("masak", products.get(0).getName());
+        Assertions.assertEquals(1, products.getContent().size()); // List<T> getContent() // resutn kontent halaman sebagai List<T>
+        Assertions.assertEquals(0, products.getNumber()); // int getNumber() // return jumlah arus Slice (sekarang berada di halaman)
+        Assertions.assertEquals(2, products.getTotalElements()); // long getTotalElements() // return jumlah total element
+        Assertions.assertEquals(2, products.getTotalPages()); // int getTotalPages() // return jumlah total halaman
+        Assertions.assertEquals("masak", products.getContent().get(0).getName()); // // List<T> getContent() // E get(int index) // get field berdasarkan index list
 
         // halaman ke 2 dan ukuran datanya
         pageable = PageRequest.of(1, 1, Sort.by(Sort.Order.desc("id"))); // static PageRequest of(int page, int size, Sort sort) // kita bisa atur offset and limit juga order by pada query method
         products = productRepository.findAllByCategory_Name("BUKU", pageable);
 
-        Assertions.assertEquals(1, products.size());
-        Assertions.assertEquals("komik", products.get(0).getName());
+        Assertions.assertEquals(1, products.getContent().size());
+        Assertions.assertEquals(1, products.getNumber());
+        Assertions.assertEquals(2, products.getTotalElements());
+        Assertions.assertEquals(2, products.getTotalPages());
+        Assertions.assertEquals("komik", products.getContent().get(0).getName());
 
         /**
-         * query result:
+         * result query:
          * Hibernate:
          *     select
          *         p1_0.id,
@@ -222,6 +284,16 @@ public class QueryRelationTest {
          *         categories c1_0
          *     where
          *         c1_0.id=?
+         * Hibernate:
+         *     select
+         *         count(p1_0.id)
+         *     from
+         *         products p1_0
+         *     left join
+         *         categories c1_0
+         *             on c1_0.id=p1_0.category_id
+         *     where
+         *         c1_0.name=?
          */
     }
 
