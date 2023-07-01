@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.transaction.support.TransactionOperations;
 
@@ -375,6 +376,7 @@ public class QueryRelationTest {
     @Autowired
     private TransactionOperations transactionOperations; // object untuk melakukan prgorammatic transaction yang sudah otomatis di spring boot
 
+    // note kalau mau test ini hapus dulu @Transaction di repository.ProductRepository.deleteByName(String name)
 //    @Test
 //    void testDeleteProduct(){
 //        // TransactionOperations ini akan berjalan satu transaksi jika ada masalah akan di roolback tidak akan di commit ke table
@@ -509,8 +511,89 @@ public class QueryRelationTest {
              *         id=?
              */
 
-
     }
+
+    /**
+     * Named Query
+     * ● Saat kita menggunakan JPA, kita sering sekali menggunakan Named Query
+     * ● Lantas bagaimana jika kita menggunakan Spring Data JPA Repository?
+     * ● Untuk menggunakan Named Query di Repository, kita cukup buat nama method sesuai degan
+     *   nama Named Query, misal jika kita memiliki Named Query dengan nama
+     *   Product.searchProductUsingName, maka kita bisa membuat method
+     *   ProductRepository.searchProductUsingName()
+     * ● Secara otomatis itu akan menggunakan Named Query tersebut
+     */
+
+    @Test
+    void testSearchProductWithNamedQuery(){
+        List<Product> products = productRepository.searchProductUsingName("komik"); // searchProductUsingName(@Param("name") String name) // mencari query berdasarkan name table products
+
+        Assertions.assertEquals(1, products.size());
+        Assertions.assertEquals("komik", products.get(0).getName());
+        Assertions.assertEquals(25_000L, products.get(0).getPrice());
+
+        /**
+         * result query:
+         * Hibernate:
+         *     select
+         *         p1_0.id,
+         *         p1_0.category_id,
+         *         p1_0.name,
+         *         p1_0.price
+         *     from
+         *         products p1_0
+         *     where
+         *         p1_0.name=?
+         * Hibernate:
+         *     select
+         *         c1_0.id,
+         *         c1_0.name
+         *     from
+         *         categories c1_0
+         *     where
+         *         c1_0.id=?
+         */
+    }
+
+    /**
+     * Sorting dan Paging
+     * ● Named Query di Repository tidak mendukung Sort
+     * ● Namun mendukung Pageable (tanpa Sort), oleh karena itu kita harus menambahkan Sorting secara manual di Named Query nya
+     */
+
+    @Test
+    void testSearchProductWithNamedQuerySortingandPaging(){
+
+        PageRequest pageable = PageRequest.of(0, 1);
+        List<Product> products = productRepository.searchProductUsingName("komik", pageable); // searchProductUsingName(@Param("name") String name, Pageable pageable) // mencari query berdasarkan name table products dengan sorting dan paging
+
+        Assertions.assertEquals(1, products.size());
+        Assertions.assertEquals("komik", products.get(0).getName());
+        Assertions.assertEquals(25_000L, products.get(0).getPrice());
+
+        /**
+         * result query:
+         * Hibernate:
+         *     select
+         *         p1_0.id,
+         *         p1_0.category_id,
+         *         p1_0.name,
+         *         p1_0.price
+         *     from
+         *         products p1_0
+         *     where
+         *         p1_0.name=? limit ?,?
+         * Hibernate:
+         *     select
+         *         c1_0.id,
+         *         c1_0.name
+         *     from
+         *         categories c1_0
+         *     where
+         *         c1_0.id=?
+         */
+    }
+
 
 
 

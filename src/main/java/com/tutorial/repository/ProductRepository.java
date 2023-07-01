@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,6 +61,17 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Transactional
     int deleteByName(String name);
 
+    /**
+     * Named Query Method
+     */
+    // binding named query yang ada di entity dengan query method di repository
+    // @Param akan binding paramaeter yand ada di query where name= :name
+    List<Product> searchProductUsingName(@Param("name") String name);
+
+    /**
+     * Sorting dan Paging dengan Pageable
+     */
+    List<Product> searchProductUsingName(@Param("name") String name, Pageable pageable);
 
 
 }
