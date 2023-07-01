@@ -9,10 +9,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionOperations;
 
@@ -830,6 +827,83 @@ public class QueryRelationTest {
          * 2023-07-01T16:51:44.081+07:00  INFO 3384 --- [           main] com.tutorial.query.QueryRelationTest     : product id= 1 : product name= komik
          * 2023-07-01T16:51:44.082+07:00  INFO 3384 --- [           main] com.tutorial.query.QueryRelationTest     : product id= 2 : product name= masak
          */
+
+    }
+
+    /**
+     * Slice<T> (versi lengkap dari Page<T>)
+     * ● Saat kita mengembalikan data dalam bentuk Page<T>, maka kita hanya akan dapat data untuk
+     *   nomor page yang dipilih
+     * ● Kita bisa menggunakan Slice<T>, yang bisa mengembalikan informasi apakah ada next page dan previous page
+     * ● https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/domain/Slice.html
+     */
+
+    @Test
+    void testSliceFetchingAllProdcutFromCategory(){
+
+        Pageable firstPage = PageRequest.of(0, 1); // static PageRequest of(int page, int size) // mendapatkan halama 1 dengan data ketentuan size
+
+        Category category = categoryRepository.findById(2L).orElse(null);
+
+        Slice<Product> slice = productRepository.findAllByCategory(category, firstPage);
+        // lakukan dengan content
+        // boolean hasNext() // return jika ada slice berikutnya
+        while (slice.hasNext()){
+           slice = productRepository.findAllByCategory(category, slice.nextPageable()); // Pageable nextPageable() // return pageable untuk requered slice berikutnya
+            // lakukan dengan content
+            log.info("slice getNumber(): {}", slice.getNumber()); // int getNumber() // return jumlah arus slice
+            log.info("slice getNumberOfElements(): {}", slice.getNumberOfElements()); // int getNumberOfElements() // return jumlah elemen saat ini pada this slice
+            log.info("slice getSize(): {}", slice.getSize()); // int getSize() // return ukuran file slice
+        }
+
+        /**
+         * query result:
+         * Hibernate:
+         *     select
+         *         c1_0.id,
+         *         c1_0.name
+         *     from
+         *         categories c1_0
+         *     where
+         *         c1_0.id=?
+         * Hibernate:
+         *     select
+         *         p1_0.id,
+         *         p1_0.category_id,
+         *         p1_0.name,
+         *         p1_0.price
+         *     from
+         *         products p1_0
+         *     where
+         *         p1_0.category_id=? limit ?,?
+         * Hibernate:
+         *     select
+         *         c1_0.id,
+         *         c1_0.name
+         *     from
+         *         categories c1_0
+         *     where
+         *         c1_0.id=?
+         * Hibernate:
+         *     select
+         *         p1_0.id,
+         *         p1_0.category_id,
+         *         p1_0.name,
+         *         p1_0.price
+         *     from
+         *         products p1_0
+         *     where
+         *         p1_0.category_id=? limit ?,?
+         * Hibernate:
+         *     select
+         *         c1_0.id,
+         *         c1_0.name
+         *     from
+         *         categories c1_0
+         *     where
+         *         c1_0.id=?
+         */
+
 
     }
 
