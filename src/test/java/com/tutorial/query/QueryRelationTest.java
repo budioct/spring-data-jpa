@@ -18,6 +18,7 @@ import org.springframework.transaction.support.TransactionOperations;
 
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 @Slf4j
 @SpringBootTest
@@ -755,6 +756,7 @@ public class QueryRelationTest {
     void testModifyingRepository(){
 
         // kita akan buat menjadi satu @Transaction dengan (Programmatic Transaction) supaya kalau terjadi Exception akan di rollback
+        // void executeWithoutResult(Consumer<TransactionStatus> action) // Jalankan tindakan yang ditentukan oleh yang diberikan Runnable dalam transaksi. tidak return value
         transactionOperations.executeWithoutResult(new Consumer<TransactionStatus>() {
             @Override
             public void accept(TransactionStatus transactionStatus) {
@@ -770,6 +772,64 @@ public class QueryRelationTest {
                 Assertions.assertEquals(0, product.getPrice()); // memastika bahwa kolom data sudah terupdate menjadi 0
             }
         });
+
+    }
+
+    /**
+     * Stream ***
+     * ● Saat kita menggunakan List<T> dan Query Method findAll…, maka secara otomatis seluruh data
+     *   hasil dari database akan di load ke memory
+     * ● Pada kasus data yang sangat banyak, hal ini sangat berbahaya karena bisa terjadi error OutOfMemory
+     * ● Spring Data JPA bisa menggunakan fitur database cursor, untuk mengambil data sedikit demi
+     *   sedikit ketika diperlukan menggunakan Java Stream
+     * ● Kita bisa membuat Query Method dengan prefix streamAll… dan return value Stream<T>
+     */
+
+    @Test
+    void testStreamAllByCategories(){
+
+        // kita akan buat menjadi satu @Transaction dengan (Programmatic Transaction) supaya kalau terjadi Exception akan di rollback
+        // void executeWithoutResult(Consumer<TransactionStatus> action) // Jalankan tindakan yang ditentukan oleh yang diberikan Runnable dalam transaksi. tidak return value
+        transactionOperations.executeWithoutResult(new Consumer<TransactionStatus>() {
+            @Override
+            public void accept(TransactionStatus transactionStatus) {
+
+                Category category = categoryRepository.findById(2L).orElse(null); // kita cari id yang ad di table category
+                Assertions.assertNotNull(category); // cek apakah tidak null hasil id yang di cari
+
+                Stream<Product> stream = productRepository.streamAllByCategory(category); // method repository yang sudah kita set Stream<T>. supaya kita akses dengan relasi dari Category ke product dengan object Stream
+                stream.forEach(new Consumer<Product>() {
+                    @Override
+                    public void accept(Product product) {
+                        log.info("product id= {} : product name= {}", product.getId(), product.getName());
+                    }
+                });
+            }
+        });
+
+        /**
+         * query result:
+         * Hibernate:
+         *     select
+         *         c1_0.id,
+         *         c1_0.name
+         *     from
+         *         categories c1_0
+         *     where
+         *         c1_0.id=?
+         * Hibernate:
+         *     select
+         *         p1_0.id,
+         *         p1_0.category_id,
+         *         p1_0.name,
+         *         p1_0.price
+         *     from
+         *         products p1_0
+         *     where
+         *         p1_0.category_id=?
+         * 2023-07-01T16:51:44.081+07:00  INFO 3384 --- [           main] com.tutorial.query.QueryRelationTest     : product id= 1 : product name= komik
+         * 2023-07-01T16:51:44.082+07:00  INFO 3384 --- [           main] com.tutorial.query.QueryRelationTest     : product id= 2 : product name= masak
+         */
 
     }
 

@@ -1,5 +1,6 @@
 package com.tutorial.repository;
 
+import com.tutorial.entity.Category;
 import com.tutorial.entity.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 @Repository // annotation @Repository optional bolah ada boleh tidak
 public interface ProductRepository extends JpaRepository<Product, Long> {
@@ -101,5 +103,14 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Modifying
     @Query(value = "UPDATE Product p SET p.price = 0 WHERE p.id= :id")
     int updateProductPriceToZero(@Param("id") Long id);
+
+
+    /**
+     * Stream<T>
+     * ketika kita menggunakan List<T> dan query method findAll.. maka itu akan di simpan ke memory yang di takutkan adalah terjadi error OutOfMemory
+     * kita bisa menangani dengan return Stream<T> dan query method streamAll.. ini bisa fetching data sedikit2 jika di perlukan dengan Java Stream
+     */
+    // query method relasi: SELECT p.* FROM products p WHERE p.category_id= ?
+    Stream<Product> streamAllByCategory(Category category);
 
 }
