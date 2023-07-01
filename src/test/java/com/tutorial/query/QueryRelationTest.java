@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
 import java.util.List;
@@ -132,7 +133,7 @@ public class QueryRelationTest {
 
     @Test
     void testFindProductSort(){
-        Sort sort = Sort.by(Sort.Order.desc("id")); // order by kita ubah urutanya menjadi desceding
+        Sort sort = Sort.by(Sort.Order.desc("id")); // static Sort by(Order... orders) // order by kita ubah urutanya menjadi desceding
         List<Product> products = productRepository.findAllByCategory_Name("BUKU", sort);
 
         Assertions.assertEquals(2, products.size());
@@ -167,6 +168,63 @@ public class QueryRelationTest {
          */
 
     }
+
+    /**
+     * Paging
+     * ● Selain Sort, Spring Data Repository juga mendukung paging seperti di EntityManager
+     * ● Caranya kita bisa tambahkan parameter Pageable di posisi terakhir parameter
+     * ● Pageable adalah sebuah interface, biasanya kita akan menggunakan PageRequest sebagai class implementasinya
+     * ● Dan jika sudah menggunakan Pageable, kita tidak perlu lagi menggunakan Sort, karena sudah bisa dihandle oleh Pageable
+     * ● https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/domain/PageRequest.html
+     */
+
+    @Test
+    void testFindProductWithPageable(){
+
+        // halaman ke 1 dan ukuran datanya
+        PageRequest pageable = PageRequest.of(0, 1, Sort.by(Sort.Order.desc("id"))); // static PageRequest of(int page, int size, Sort sort) // kita bisa atur offset and limit juga order by pada query method
+        List<Product> products = productRepository.findAllByCategory_Name("BUKU", pageable);
+
+        // hasil sudah di kasih offset dan limiet juga order by dalam query nya
+        Assertions.assertEquals(1, products.size());
+        Assertions.assertEquals("masak", products.get(0).getName());
+
+        // halaman ke 2 dan ukuran datanya
+        pageable = PageRequest.of(1, 1, Sort.by(Sort.Order.desc("id"))); // static PageRequest of(int page, int size, Sort sort) // kita bisa atur offset and limit juga order by pada query method
+        products = productRepository.findAllByCategory_Name("BUKU", pageable);
+
+        Assertions.assertEquals(1, products.size());
+        Assertions.assertEquals("komik", products.get(0).getName());
+
+        /**
+         * query result:
+         * Hibernate:
+         *     select
+         *         p1_0.id,
+         *         p1_0.category_id,
+         *         p1_0.name,
+         *         p1_0.price
+         *     from
+         *         products p1_0
+         *     left join
+         *         categories c1_0
+         *             on c1_0.id=p1_0.category_id
+         *     where
+         *         c1_0.name=?
+         *     order by
+         *         p1_0.id desc limit ?,
+         *         ?
+         * Hibernate:
+         *     select
+         *         c1_0.id,
+         *         c1_0.name
+         *     from
+         *         categories c1_0
+         *     where
+         *         c1_0.id=?
+         */
+    }
+
 
 
 

@@ -1,6 +1,7 @@
 package com.tutorial.repository;
 
 import com.tutorial.entity.Product;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -21,5 +22,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     // query method relasi dengan sorting: select * from products left join categories on (categories.id = product.category_id) where name = ? order by products.id desc
     List<Product> findAllByCategory_Name(String name, Sort sort);
+
+
+    // query method relasi dengan pageable: select * from products left join categories on (categories.id = product.category_id) where name = ? order by products.id desc limit ?, ?
+    List<Product> findAllByCategory_Name(String name, Pageable pageable);
 
 }
