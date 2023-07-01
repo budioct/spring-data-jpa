@@ -182,7 +182,7 @@ public class QueryRelationTest {
 //    @Test
 //    void testFindProductWithPageable(){
 //
-//        // halaman ke 1 dan ukuran datanya
+//        // halaman ke 0 dan ukuran datanya
 //        PageRequest pageable = PageRequest.of(0, 1, Sort.by(Sort.Order.desc("id"))); // static PageRequest of(int page, int size, Sort sort) // kita bisa atur offset and limit juga order by pada query method
 //        List<Product> products = productRepository.findAllByCategory_Name("BUKU", pageable);
 //
@@ -190,7 +190,7 @@ public class QueryRelationTest {
 //        Assertions.assertEquals(1, products.size());
 //        Assertions.assertEquals("masak", products.get(0).getName());
 //
-//        // halaman ke 2 dan ukuran datanya
+//        // halaman ke 1 dan ukuran datanya
 //        pageable = PageRequest.of(1, 1, Sort.by(Sort.Order.desc("id"))); // static PageRequest of(int page, int size, Sort sort) // kita bisa atur offset and limit juga order by pada query method
 //        products = productRepository.findAllByCategory_Name("BUKU", pageable);
 //
@@ -237,7 +237,7 @@ public class QueryRelationTest {
     @Test
     void testFindProductWithPageableResultPage(){
 
-        // halaman ke 1 dan ukuran datanya
+        // halaman ke 0 dan ukuran datanya
         PageRequest pageable = PageRequest.of(0, 1, Sort.by(Sort.Order.desc("id"))); // static PageRequest of(int page, int size, Sort sort) // kita bisa atur offset and limit juga order by pada query method
         Page<Product> products = productRepository.findAllByCategory_Name("BUKU", pageable);
 
@@ -248,7 +248,7 @@ public class QueryRelationTest {
         Assertions.assertEquals(2, products.getTotalPages()); // int getTotalPages() // return jumlah total halaman
         Assertions.assertEquals("masak", products.getContent().get(0).getName()); // // List<T> getContent() // E get(int index) // get field berdasarkan index list
 
-        // halaman ke 2 dan ukuran datanya
+        // halaman ke 1 dan ukuran datanya
         pageable = PageRequest.of(1, 1, Sort.by(Sort.Order.desc("id"))); // static PageRequest of(int page, int size, Sort sort) // kita bisa atur offset and limit juga order by pada query method
         products = productRepository.findAllByCategory_Name("BUKU", pageable);
 
@@ -259,7 +259,7 @@ public class QueryRelationTest {
         Assertions.assertEquals("komik", products.getContent().get(0).getName());
 
         /**
-         * result query:
+         * query result:
          * Hibernate:
          *     select
          *         p1_0.id,
@@ -284,6 +284,43 @@ public class QueryRelationTest {
          *         categories c1_0
          *     where
          *         c1_0.id=?
+         * Hibernate:
+         *     select
+         *         count(p1_0.id)
+         *     from
+         *         products p1_0
+         *     left join
+         *         categories c1_0
+         *             on c1_0.id=p1_0.category_id
+         *     where
+         *         c1_0.name=?
+         */
+    }
+
+    /**
+     * Count Query Method
+     * ● JPA Repository juga bisa digunakan untuk membuat count query method
+     * ● Cukup gunakan prefix method countBy…
+     * ● Selebihnya kita bisa membuat format seperti Query Method biasanya
+     */
+
+    @Test
+    void testCountProductRelasiCategory(){
+
+        long count = productRepository.count(); // long count() // return jumlah data entity yang tersedia
+        Assertions.assertEquals(2L, count);
+
+        // query method
+        count = productRepository.countByCategory_Name("BUKU");
+        Assertions.assertEquals(2L, count);
+
+        /**
+         * query result:
+         * Hibernate:
+         *     select
+         *         count(*)
+         *     from
+         *         products p1_0
          * Hibernate:
          *     select
          *         count(p1_0.id)

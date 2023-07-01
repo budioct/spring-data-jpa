@@ -34,4 +34,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     // query method relasi dengan pageable: select * from products left join categories on (categories.id = products.category_id) where name=? order by products.id desc limit ?, ?
     Page<Product> findAllByCategory_Name(String name, Pageable pageable);
 
+    /**
+     * Count Query Method
+     */
+
+    // ingin mendapatkan total data dari product berdasarkan relasi category dengan where name=?
+    // query method relasi: select count(p.id) from product p left join categories c on (c.id = p.category_id) where c.name=?
+    Long countByCategory_Name(String name);
+
 }
