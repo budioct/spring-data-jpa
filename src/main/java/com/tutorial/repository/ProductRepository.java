@@ -2,6 +2,8 @@ package com.tutorial.repository;
 
 import com.tutorial.entity.Category;
 import com.tutorial.entity.Product;
+import com.tutorial.model.ProductPrice;
+import com.tutorial.model.SimpleProduct;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -130,4 +132,16 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Product> findFirstByIdEquals(Long id); // kita akan mencari id, karna id belum tentu ada kita return Optional<T> bisa menangani nullable
 
+
+    /**
+     * Projection
+     * kita tahu terdapat fitur di JPA QL untuk memanggil constructor sebuah class, sehingga return hasil query bisa dalam bentuk class bukan Entity
+     * namun projection lebih mudah. caranya kita bisa buat Query Method dengan return Interface yang kita inginkan
+     * secara otomatis nanti Spring Data akan melakukan mapping sesuai dengan field hasil Query dengan Interface return nya
+     */
+    //List<ProductPrice> findAllByNameLike(String name);
+    //List<SimpleProduct> findAllByNameLike(String name);
+
+    // jika kita ingin keduanya bisa digunakan antara projection interface atau projection Record, dengan cara...
+    <T> List<T> findAllByNameLike(String name, Class<T> tClass); // jadi kita tinggal masukan object apa di parameter ke 2 nanti return value akan mengikuti nya
 }

@@ -2,6 +2,8 @@ package com.tutorial.query;
 
 import com.tutorial.entity.Category;
 import com.tutorial.entity.Product;
+import com.tutorial.model.ProductPrice;
+import com.tutorial.model.SimpleProduct;
 import com.tutorial.repository.CategoryRepository;
 import com.tutorial.repository.ProductRepository;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -1013,7 +1015,69 @@ public class QueryRelationTest {
 
     }
 
+    /**
+     * Projection
+     * ● Saat kita belajar JPA, kita tahu terdapat fitur di JPA QL untuk memanggil constructor sebuah class,
+     *   sehingga return hasil query bisa dalam bentuk class bukan Entity
+     * ● Di Spring, terdapat fitur bernama Projection, yang mirip namun lebih mudah
+     * ● Caranya di Repository, kita bisa buat Query Method dengan return Interface yang kita inginkan,
+     *   secara otomatis nanti Spring Data akan melakukan mapping sesuai dengan field hasil Query dengan Interface return nya
+     * ● Yup, tidak salah mengetik, jadi kita harus buat dalam bentuk Interface, bukan Class
+     * ● Hal ini agar Spring Data tahu bahwa itu adalah projection
+     *
+     * Java Record
+     * ● Atau, jika sudah menggunakan versi Java 17, ada baiknya kita buat Projection dalam bentuk Java Record
+     * ● Bedanya dengan interface, saat menggunakan interface, maka Spring Data akan menggunakan Proxy (Reflection)
+     * ● Sedangkan ketika menggunakan Java Record, akan dibuat instance nya secara otomatis
+     *
+     * Dynamic Projection
+     * ● Kadang kita mungkin ingin membuat beberapa jenis Projection Interface / Record
+     * ● Pada kasus ini, kita bisa menggunakan Generic di Query Method nya, dan juga menambahkan
+     *   parameter Class di parameter terakhir Query Method nya
+     *
+     */
 
+    @Test
+    void testProjection(){
+
+        // projection dengan class interface
+        // List<SimpleProduct> simpleProducts = productRepository.findAllByNameLike("%k%"); // List<SimpleProduct> findAllByNameLike(String name) // mencari where product.name like = %k%
+        // Assertions.assertEquals(2, simpleProducts.size());
+        // Assertions.assertEquals("komik", simpleProducts.get(0).getName());
+        // Assertions.assertEquals("masak", simpleProducts.get(1).getName());
+
+        // projection dengan class Record
+        // List<ProductPrice> productPrices = productRepository.findAllByNameLike("%k%"); // List<SimpleProduct> findAllByNameLike(String name)
+        // Assertions.assertEquals(2, productPrices.size());
+        // Assertions.assertEquals("komik", productPrices.get(0).name());
+        // Assertions.assertEquals("masak", productPrices.get(1).name());
+
+        // projection dengan dynamic
+        List<SimpleProduct> simpleProducts = productRepository.findAllByNameLike("%k", SimpleProduct.class);
+        Assertions.assertEquals(2, simpleProducts.size());
+        Assertions.assertEquals("komik", simpleProducts.get(0).getName());
+        Assertions.assertEquals("masak", simpleProducts.get(1).getName());
+
+        List<ProductPrice> productPrices = productRepository.findAllByNameLike("%k%", ProductPrice.class);
+        Assertions.assertEquals(2, productPrices.size());
+        Assertions.assertEquals("komik", productPrices.get(0).name());
+        Assertions.assertEquals("masak", productPrices.get(1).name());
+
+        /**
+         * result query:
+         * Hibernate:
+         *     select
+         *         p1_0.id,
+         *         p1_0.name,
+         *         p1_0.price
+         *     from
+         *         products p1_0
+         *     where
+         *         p1_0.name like ? escape '\\'
+         *
+         * hasil select mengikuti interface SimpleProduct. yang mana akan di binding ke field di class entity Product
+         */
+    }
 
 
 
