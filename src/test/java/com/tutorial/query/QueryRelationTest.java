@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 
@@ -121,6 +122,52 @@ public class QueryRelationTest {
          */
 
     }
+
+    /**
+     * Sorting
+     * ● Spring Data Repository juga memiliki fitur untuk melakukan Sorting, caranya kita bisa tambahkan
+     *   parameter Sort pada posisi parameter terakhir
+     * ● https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/domain/Sort.html
+     */
+
+    @Test
+    void testFindProductSort(){
+        Sort sort = Sort.by(Sort.Order.desc("id")); // order by kita ubah urutanya menjadi desceding
+        List<Product> products = productRepository.findAllByCategory_Name("BUKU", sort);
+
+        Assertions.assertEquals(2, products.size());
+        Assertions.assertEquals("masak", products.get(0).getName());
+        Assertions.assertEquals("komik", products.get(1).getName());
+
+        /**
+         * query result:
+         * Hibernate:
+         *     select
+         *         p1_0.id,
+         *         p1_0.category_id,
+         *         p1_0.name,
+         *         p1_0.price
+         *     from
+         *         products p1_0
+         *     left join
+         *         categories c1_0
+         *             on c1_0.id=p1_0.category_id
+         *     where
+         *         c1_0.name=?
+         *     order by
+         *         p1_0.id desc
+         * Hibernate:
+         *     select
+         *         c1_0.id,
+         *         c1_0.name
+         *     from
+         *         categories c1_0
+         *     where
+         *         c1_0.id=?
+         */
+
+    }
+
 
 
 
