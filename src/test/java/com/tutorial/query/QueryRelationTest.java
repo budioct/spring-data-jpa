@@ -469,7 +469,7 @@ public class QueryRelationTest {
             productRepository.save(product);
 
             // hapus data table product dengan berdasarkan nama yang ada
-            int delete = productRepository.deleteByName("Naruto"); // jika ada data naruto di table maka hapus. jika berhasil di hapus akan return 1
+            int delete = productRepository.deleteByName("Naruto"); // int deleteByName(String name) // jika ada data naruto di table maka hapus. jika berhasil di hapus akan return 1
             Assertions.assertEquals(1, delete);
 
             // test no exist data
@@ -593,6 +593,156 @@ public class QueryRelationTest {
          *         c1_0.id=?
          */
     }
+
+    /**
+     * Query Annotation
+     * ● Query Method cocok untuk kasus membuat jenis query yang tidak terlalu kompleks. Saat query
+     *   terlalu kompleks dan parameter banyak, maka nama method bisa terlalu panjang jika menggunakan Query Method
+     * ● Untungnya Spring Data JPA menyediakan membuat query menggunakan annotation Query,
+     *   dimana kita bisa buat JPA QL atau Native Query
+     * ● https://docs.spring.io/spring-data/jpa/docs/current/api/org/springframework/data/jpa/repository/Query.html
+     */
+
+    @Test
+    void testProductLikewithQueryAnnotation(){
+
+        List<Product> products = productRepository.searchProduct("%komik%"); // List<Product> searchProduct(@Param("name") String name)
+        Assertions.assertEquals(1, products.size());
+        log.info("name: {}", products.get(0).getName());
+
+        products = productRepository.searchProduct("%BUKU%");
+        Assertions.assertEquals(2, products.size());
+
+        log.info("name: {}", products.get(0).getName());
+
+        /**
+         * result query:
+         * Hibernate:
+         *     select
+         *         p1_0.id,
+         *         p1_0.category_id,
+         *         p1_0.name,
+         *         p1_0.price
+         *     from
+         *         products p1_0
+         *     join
+         *         categories c1_0
+         *             on c1_0.id=p1_0.category_id
+         *     where
+         *         p1_0.name like ? escape ''
+         *         or c1_0.name like ? escape ''
+         * Hibernate:
+         *     select
+         *         c1_0.id,
+         *         c1_0.name
+         *     from
+         *         categories c1_0
+         *     where
+         *         c1_0.id=?
+         * 2023-07-01T12:41:10.235+07:00  INFO 8580 --- [           main] com.tutorial.query.QueryRelationTest     : name: komik
+         * Hibernate:
+         *     select
+         *         p1_0.id,
+         *         p1_0.category_id,
+         *         p1_0.name,
+         *         p1_0.price
+         *     from
+         *         products p1_0
+         *     join
+         *         categories c1_0
+         *             on c1_0.id=p1_0.category_id
+         *     where
+         *         p1_0.name like ? escape ''
+         *         or c1_0.name like ? escape ''
+         * Hibernate:
+         *     select
+         *         c1_0.id,
+         *         c1_0.name
+         *     from
+         *         categories c1_0
+         *     where
+         *         c1_0.id=?
+         * 2023-07-01T12:41:10.242+07:00  INFO 8580 --- [           main] com.tutorial.query.QueryRelationTest     : name: komik
+         */
+
+    }
+
+    /**
+     * Sort dan Paging
+     * ● Query Annotation mendukung Sort dan Paging
+     * ● Jadi kita bisa menggunakan parameter Sort atau Pageable pada Query Annotation
+     */
+
+    @Test
+    void testProductLikewithQueryAnnotationSorting(){
+
+        Pageable pageable = PageRequest.of(0,1, Sort.by(Sort.Order.desc("id")));
+        List<Product> products = productRepository.searchProduct("%komik%", pageable); // List<Product> searchProduct(@Param("name") String name, Pageable pageable)
+
+        Assertions.assertEquals(1, products.size());
+        log.info("name: {}", products.get(0).getName());
+
+        products = productRepository.searchProduct("%BUKU%");
+        Assertions.assertEquals(2, products.size());
+        log.info("name: {}", products.get(0).getName());
+
+        /**
+         * result query:
+         * Hibernate:
+         *     select
+         *         p1_0.id,
+         *         p1_0.category_id,
+         *         p1_0.name,
+         *         p1_0.price
+         *     from
+         *         products p1_0
+         *     join
+         *         categories c1_0
+         *             on c1_0.id=p1_0.category_id
+         *     where
+         *         p1_0.name like ? escape ''
+         *         or c1_0.name like ? escape ''
+         *     order by
+         *         p1_0.id desc limit ?,
+         *         ?
+         * Hibernate:
+         *     select
+         *         c1_0.id,
+         *         c1_0.name
+         *     from
+         *         categories c1_0
+         *     where
+         *         c1_0.id=?
+         * 2023-07-01T12:40:28.190+07:00  INFO 11992 --- [           main] com.tutorial.query.QueryRelationTest     : name: komik
+         * Hibernate:
+         *     select
+         *         p1_0.id,
+         *         p1_0.category_id,
+         *         p1_0.name,
+         *         p1_0.price
+         *     from
+         *         products p1_0
+         *     join
+         *         categories c1_0
+         *             on c1_0.id=p1_0.category_id
+         *     where
+         *         p1_0.name like ? escape ''
+         *         or c1_0.name like ? escape ''
+         * Hibernate:
+         *     select
+         *         c1_0.id,
+         *         c1_0.name
+         *     from
+         *         categories c1_0
+         *     where
+         *         c1_0.id=?
+         * 2023-07-01T12:40:28.199+07:00  INFO 11992 --- [           main] com.tutorial.query.QueryRelationTest     : name: komik
+         */
+
+    }
+
+
+
 
 
 
