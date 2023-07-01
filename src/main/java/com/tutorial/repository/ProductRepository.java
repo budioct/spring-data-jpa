@@ -50,4 +50,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     // query method relasi: select p.id from products p where p.name=? limit ?
     boolean existsByName(String name);
 
+    /**
+     * Delete Query Method
+     */
+
+    // ingin menghapus data berdasarkan kolom name table product
+    // query method relasi: delete from products where id=?
+    int deleteByName(String name);
+
 }

@@ -12,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.transaction.support.TransactionOperations;
 
 import java.util.List;
 
@@ -362,6 +363,79 @@ public class QueryRelationTest {
          *     where
          *         p1_0.name=? limit ?
          */
+    }
+
+    /**
+     * Delete Query Method
+     * ● Kita juga bisa membuat delete Query Method dengan prefix deleteBy
+     * ● Untuk delete, kita bisa return int sebagai penanda jumlah record yang berhasil di hapus
+     * ● Untuk membuat delete query method, kita bisa gunakan prefix deleteBy…
+     */
+
+    @Autowired
+    private TransactionOperations transactionOperations; // object untuk melakukan prgorammatic transaction yang sudah otomatis di spring boot
+
+    @Test
+    void testDeleteProduct(){
+        // TransactionOperations ini akan berjalan satu transaksi jika ada masalah akan di roolback tidak akan di commit ke table
+        transactionOperations.executeWithoutResult(transactionStatus -> {
+            // kita find id category dengan id 2
+            Category category = categoryRepository.findById(2L).orElse(null);
+            Assertions.assertNotNull(category);
+
+            // tambahkan data product ke id yang ada di category
+            Product product = new Product();
+            product.setName("Naruto");
+            product.setPrice(30_000L);
+            product.setCategory(category);
+            productRepository.save(product);
+
+            // hapus data table product dengan berdasarkan nama yang ada
+            int delete = productRepository.deleteByName("Naruto"); // jika ada data naruto di table maka hapus. jika berhasil di hapus akan return 1
+            Assertions.assertEquals(1, delete);
+
+            // test no exist data
+            delete = productRepository.deleteByName("Naruto"); // jika ada data naruto di table maka hapus. jika berhasil di hapus akan return 1
+            Assertions.assertEquals(0, delete);
+
+            /**
+             * result query:
+             * Hibernate:
+             *     select
+             *         c1_0.id,
+             *         c1_0.name
+             *     from
+             *         categories c1_0
+             *     where
+             *         c1_0.id=?
+             * Hibernate:
+             *     insert
+             *     into
+             *         products
+             *         (category_id, name, price)
+             *     values
+             *         (?, ?, ?)
+             * Hibernate:
+             *     select
+             *         p1_0.id,
+             *         p1_0.category_id,
+             *         p1_0.name,
+             *         p1_0.price
+             *     from
+             *         products p1_0
+             *     where
+             *         p1_0.name=?
+             *** Hibernate:
+             *     delete
+             *     from
+             *         products
+             *     where
+             *         id=?
+             */
+
+        });
+
+
     }
 
 
