@@ -13,9 +13,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionOperations;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 @Slf4j
 @SpringBootTest
@@ -34,6 +36,9 @@ public class QueryRelationTest {
 
     @Autowired
     ProductRepository productRepository;
+
+    @Autowired
+    private TransactionOperations transactionOperations; // object untuk melakukan prgorammatic transaction yang sudah otomatis di spring boot
 
     @Test
     void createMethodRelationProduct(){
@@ -373,8 +378,6 @@ public class QueryRelationTest {
      * ● Untuk membuat delete query method, kita bisa gunakan prefix deleteBy…
      */
 
-    @Autowired
-    private TransactionOperations transactionOperations; // object untuk melakukan prgorammatic transaction yang sudah otomatis di spring boot
 
     // note kalau mau test ini hapus dulu @Transaction di repository.ProductRepository.deleteByName(String name)
 //    @Test
@@ -740,6 +743,36 @@ public class QueryRelationTest {
          */
 
     }
+
+    /**
+     * Modifying
+     * ● Query Annotation juga bisa digunakan untuk membuat JPQ QL atau Native Query untuk perintah
+     *   Update atau Delete, caranya kita perlu menambahkan annotation @Modifying untuk memberitahu bahwa ini bukan Query Select
+     * ● https://docs.spring.io/spring-data/jpa/docs/current/api/org/springframework/data/jpa/repository/Modifying.html
+     */
+
+    @Test
+    void testModifyingRepository(){
+
+        // kita akan buat menjadi satu @Transaction dengan (Programmatic Transaction) supaya kalau terjadi Exception akan di rollback
+        transactionOperations.executeWithoutResult(new Consumer<TransactionStatus>() {
+            @Override
+            public void accept(TransactionStatus transactionStatus) {
+
+                int total = productRepository.deleteProductUsingName("Wrong"); // mencari name di table product dengan name Wrong. jika tidak ada return 0
+                Assertions.assertEquals(0, total); // tiak akan terhapus karena tidak ada nama Wrong
+
+                total = productRepository.updateProductPriceToZero(1L); // mencari id di table product untuk di update. jika ada maka return 1
+                Assertions.assertEquals(1, total); // cek bahwa id ada
+
+                Product product = productRepository.findById(1L).orElse(null);
+                Assertions.assertNotNull(product);
+                Assertions.assertEquals(0, product.getPrice()); // memastika bahwa kolom data sudah terupdate menjadi 0
+            }
+        });
+
+    }
+
 
 
 

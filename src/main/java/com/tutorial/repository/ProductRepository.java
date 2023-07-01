@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -84,7 +85,21 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      * Query Annotation Sorting
      * untuk query yang panjang dan dinamis
      */
-    // query method relasi:
+    // query method relasi: SELECT p.* FROM products p join categories c on (c.id = p.category_id) WHERE p.name LIKE '%komik%' ESCAPE '' OR p.name LIKE '%BUKU%' ESCAPE '';
     @Query(value = "SELECT p FROM Product p WHERE p.name LIKE :name OR p.category.name LIKE :name")
     List<Product> searchProduct(@Param("name") String name, Pageable pageable);
+
+
+    /**
+     * @Modifying memberi tahu kalau ini bukan untuk query select
+     * tetapi untuk query untuk update dan delete
+     */
+    @Modifying
+    @Query(value = "DELETE FROM Product p WHERE p.name= :name")
+    int deleteProductUsingName(@Param("name") String name); // jika query delete berhasil maka akan return int value 1
+
+    @Modifying
+    @Query(value = "UPDATE Product p SET p.price = 0 WHERE p.id= :id")
+    int updateProductPriceToZero(@Param("id") Long id);
+
 }
