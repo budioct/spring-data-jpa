@@ -49,3 +49,17 @@ where p.name like ? escape ''
 # query anotation product
 SELECT p.* FROM products p join categories c on (c.id = p.category_id) WHERE p.name LIKE '%komik%' ESCAPE '' OR p.name LIKE '%BUKU%' ESCAPE '';
 
+
+ALTER TABLE categories
+    ADD COLUMN created_date TIMESTAMP;
+
+ALTER TABLE categories
+    ADD COLUMN last_modified_data TIMESTAMP;
+
+ALTER TABLE categories
+    RENAME COLUMN last_modified_data TO last_modified_date;
+
+select * from categories;
+
+delete from categories c where c.id = 49;
+
