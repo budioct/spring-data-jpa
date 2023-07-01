@@ -334,6 +334,36 @@ public class QueryRelationTest {
          */
     }
 
+    /**
+     * Exist Query Method (cek apakah ada datanya)
+     * ● Selain Count, kita juga bisa membuat Exists method di Query Method
+     * ● Method ini sebenarnya sederhana, return value nya adalah boolean, untuk mengecek apakah ada
+     *   data sesuai dengan Query Method atau tidak
+     * ● Untuk membuatnya kita bisa gunakan prefix existsBy…
+     */
+
+    @Test
+    void testExistProductsRelasiCategory(){
+
+        boolean exists = productRepository.existsByName("masak");
+        Assertions.assertTrue(exists);
+
+        // test noExist / tidak ada
+        exists = productRepository.existsByName("naruto");
+        Assertions.assertFalse(exists);
+
+        /**
+         * query result:
+         * Hibernate:
+         *     select
+         *         p1_0.id
+         *     from
+         *         products p1_0
+         *     where
+         *         p1_0.name=? limit ?
+         */
+    }
+
 
 
 

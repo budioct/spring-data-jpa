@@ -42,4 +42,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     // query method relasi: select count(p.id) from product p left join categories c on (c.id = p.category_id) where c.name=?
     Long countByCategory_Name(String name);
 
+    /**
+     * Exist Query Method
+     */
+
+    // ingin mendapatkan apakah data ada atau tidak (untuk memastikan terlebih dahulu)
+    // query method relasi: select p.id from products p where p.name=? limit ?
+    boolean existsByName(String name);
+
 }
