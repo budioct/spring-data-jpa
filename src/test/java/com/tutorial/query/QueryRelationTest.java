@@ -375,10 +375,86 @@ public class QueryRelationTest {
     @Autowired
     private TransactionOperations transactionOperations; // object untuk melakukan prgorammatic transaction yang sudah otomatis di spring boot
 
+//    @Test
+//    void testDeleteProduct(){
+//        // TransactionOperations ini akan berjalan satu transaksi jika ada masalah akan di roolback tidak akan di commit ke table
+//        // jika tidak menggunakan TransactionOperations akan Exception
+//        // org.springframework.dao.InvalidDataAccessApiUsageException: No EntityManager with actual transaction available for current thread - cannot reliably process 'remove' call
+//        transactionOperations.executeWithoutResult(transactionStatus -> {
+//            // kita find id category dengan id 2
+//            Category category = categoryRepository.findById(2L).orElse(null);
+//            Assertions.assertNotNull(category);
+//
+//            // tambahkan data product ke id yang ada di category
+//            Product product = new Product();
+//            product.setName("Naruto");
+//            product.setPrice(30_000L);
+//            product.setCategory(category);
+//            productRepository.save(product);
+//
+//            // hapus data table product dengan berdasarkan nama yang ada
+//            int delete = productRepository.deleteByName("Naruto"); // jika ada data naruto di table maka hapus. jika berhasil di hapus akan return 1
+//            Assertions.assertEquals(1, delete);
+//
+//            // test no exist data
+//            delete = productRepository.deleteByName("Naruto"); // jika ada data naruto di table maka hapus. jika berhasil di hapus akan return 1
+//            Assertions.assertEquals(0, delete);
+//
+//            /**
+//             * result query:
+//             * Hibernate:
+//             *     select
+//             *         c1_0.id,
+//             *         c1_0.name
+//             *     from
+//             *         categories c1_0
+//             *     where
+//             *         c1_0.id=?
+//             * Hibernate:
+//             *     insert
+//             *     into
+//             *         products
+//             *         (category_id, name, price)
+//             *     values
+//             *         (?, ?, ?)
+//             * Hibernate:
+//             *     select
+//             *         p1_0.id,
+//             *         p1_0.category_id,
+//             *         p1_0.name,
+//             *         p1_0.price
+//             *     from
+//             *         products p1_0
+//             *     where
+//             *         p1_0.name=?
+//             *** Hibernate:
+//             *     delete
+//             *     from
+//             *         products
+//             *     where
+//             *         id=?
+//             */
+//
+//        });
+//
+//    }
+
+    /**
+     * Repository Transaction
+     * ● Secara default, saat kita membuat Repository interface, Spring akan membuat sebagai instance turunan dari SimpleJpaRepository
+     * ● Oleh karena itu, saat kita melakukan CRUD, kita tidak perlu melakukan didalam Transaction, hal ini
+     *   karena sudah ditambahkan annotation di class SimpleJpaRepository
+     * ● Class SimpleJpaRepository terdapat annontatio @Transactional(readOnly=true), oleh karena itu
+     *   saat kita buat Query Method di Repository, maka secara default akan menjalankan transaction read only
+     * ● https://docs.spring.io/spring-data/data-jpa/docs/current/api/org/springframework/data/jpa/repository/support/SimpleJpaRepository.html
+     */
+
     @Test
-    void testDeleteProduct(){
-        // TransactionOperations ini akan berjalan satu transaksi jika ada masalah akan di roolback tidak akan di commit ke table
-        transactionOperations.executeWithoutResult(transactionStatus -> {
+    void testDeleteProductwithAnnotationTransaction(){
+        // kita sudah manaruh method deleteByName(String name) dengan annotation @Transactional
+        // jadi setiap proses Persistance itu akan jalan secara sendiri sendiri transaksi nya jadi ketika ada Exception tidak akan error
+        // kekurangnya adalah ketika ada masalah data akan tetap di commit, tidak akan di rollback
+
             // kita find id category dengan id 2
             Category category = categoryRepository.findById(2L).orElse(null);
             Assertions.assertNotNull(category);
@@ -433,12 +509,8 @@ public class QueryRelationTest {
              *         id=?
              */
 
-        });
-
 
     }
-
-
 
 
 

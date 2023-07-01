@@ -26,5 +26,8 @@ CREATE TABLE products
 ) ENGINE = InnoDB;
 
 select * from categories;
+
 select * from products;
+
+delete from products where id = 4;
 
