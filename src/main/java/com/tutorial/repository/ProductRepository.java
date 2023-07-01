@@ -2,11 +2,13 @@ package com.tutorial.repository;
 
 import com.tutorial.entity.Category;
 import com.tutorial.entity.Product;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 @Repository // annotation @Repository optional bolah ada boleh tidak
@@ -120,5 +123,13 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      */
     // query method relasi: SELECT p.* FROM products p WHERE p.category_id=? limit ?,?
     Slice<Product> findAllByCategory(Category category, Pageable pageable);
+
+
+    /**
+     * Locking Optimistis Locking (yang paling cepat dia dapat) atau Pesimistic Locking (Queue)
+     * di spring jpa kita tinggal menggunakan @Lock tidak perlu lagi buat manual dengan EntityManager
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<Product> findFirstByIdEquals(Long id); // kita akan mencari id, karna id belum tentu ada kita return Optional<T> bisa menangani nullable
 
 }
