@@ -63,3 +63,4 @@ select * from categories;
 
 delete from categories c where c.id = 49;
 
+select * from products;

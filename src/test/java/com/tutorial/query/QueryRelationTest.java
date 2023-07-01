@@ -4,12 +4,17 @@ import com.tutorial.entity.Category;
 import com.tutorial.entity.Product;
 import com.tutorial.repository.CategoryRepository;
 import com.tutorial.repository.ProductRepository;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionOperations;
 
@@ -941,7 +946,72 @@ public class QueryRelationTest {
 
     }
 
+    /**
+     * Specification Executor
+     * ● Di JPA, terdapat fitur Criteria untuk membuat Query secara dinamis
+     * ● Hal ini bisa kita gunakan fitur Specification di Spring Data JPA
+     * ● Untuk mendukung fitur ini, Repository yang kita buat harus extends JpaSpeficitaionExecutor,
+     *   dimana terdapat banyak sekali method dengan parameter Specification
+     * ● https://docs.spring.io/spring-data/jpa/docs/current/api/org/springframework/data/jpa/repository/JpaSpecificationExecutor.html
+     *
+     * Specification
+     * ● Specification adalah lambda yang bisa kita buat dengan mengembalikan data JPA Predicate seperti
+     *   yang perah kita pelajari di kelas JPA
+     * ● Kita bisa mendapatkan detail dari Root, CriteriaQuery dan CriteriaBuilder di method toPredicate() milik Specification
+     * ● https://docs.spring.io/spring-data/jpa/docs/current/api/org/springframework/data/jpa/domain/Specification.html
+     *
+     * // untuk mengaktifkan Spesification spring data jpa kita perlu extends interface JpaSpecificationExecutor<T> di layer Repository
+     *    seperti:
+     *    @Repository // annotation @Repository optional bolah ada boleh tidak
+     *    public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {}
+     *
+     */
 
+    @Test
+    void testSpecification(){
+        Specification<Product> specification = new Specification<Product>() {
+            @Override
+            public Predicate toPredicate(Root<Product> root, CriteriaQuery<?> criteria, CriteriaBuilder builder) {
+                return criteria.where(
+                        builder.or(
+                                builder.equal(root.get("name"), "komik"),
+                                builder.equal(root.get("name"), "masak")
+                        )
+                ).getRestriction();
+            }
+        };
+        List<Product> products = productRepository.findAll(specification);
+
+        Assertions.assertEquals(2, products.size());
+        Assertions.assertEquals("komik", products.get(0).getName());
+        Assertions.assertEquals("masak", products.get(1).getName());
+
+        /**
+         * result query:
+         * Hibernate:
+         *     select
+         *         p1_0.id,
+         *         p1_0.category_id,
+         *         p1_0.name,
+         *         p1_0.price
+         *     from
+         *         products p1_0
+         *     where
+         *         p1_0.name=?
+         *         or p1_0.name=?
+         * Hibernate:
+         *     select
+         *         c1_0.id,
+         *         c1_0.created_date,
+         *         c1_0.last_modified_date,
+         *         c1_0.name
+         *     from
+         *         categories c1_0
+         *     where
+         *         c1_0.id=?
+         */
+
+    }
 
 
 
